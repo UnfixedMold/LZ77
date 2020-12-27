@@ -64,9 +64,7 @@ def encode(file_to_read, file_to_write, search_bytes, lookahead_bytes):
         lookahead_buf = data[lookahead_it:lookahead_it + lookahead_len]
 
         (offset, length, symbol) = find_match(search_buf, lookahead_buf)
-
-        file.write(struct.pack('Hs', (offset << lookahead_bytes) + length, chr(symbol).encode()))
-
+        file.write(struct.pack('HB', (offset << lookahead_bytes) + length, symbol))
         lookahead_it += length + 1
 
         if lookahead_it >= search_len:

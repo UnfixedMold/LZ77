@@ -12,12 +12,10 @@ def main():
     buffer = "".encode()
 
     lookahead_bytes, *_ = struct.unpack('H', data[:2])
-
     i = 2
 
     while i < len(data):
-
-        offset_and_length, letter = struct.unpack('Hc', data[i:i+3])
+        offset_and_length, letter = struct.unpack('HB', data[i:i+3])
         offset = offset_and_length >> lookahead_bytes
         length = offset_and_length - offset * (2**lookahead_bytes)
 
@@ -27,10 +25,8 @@ def main():
 
         if offset > 0:
             buffer += buffer[-offset: -offset + length]
-
-        buffer += letter
+        buffer += letter.to_bytes(1,'big')
         i += 3
-
     file.write(buffer)
 
 
