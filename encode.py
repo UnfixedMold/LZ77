@@ -1,9 +1,10 @@
 import struct
 import sys
 import os
+import math
 
 
-def find_match(search_buf, lookahead_buf, max_matches):
+def find_match(search_buf, lookahead_buf, max_match_depth):
 
     sl = len(search_buf)
     lal = len(lookahead_buf)
@@ -21,9 +22,15 @@ def find_match(search_buf, lookahead_buf, max_matches):
     best_it = 0
     max_it = 0
     i = 0
-    while i < sl and max_it < max_matches:
+
+    while i < sl:
+
+        if max_match_depth and max_it >= int(max_match_depth):
+            break
+
         length = 0
         match_find = False
+
         while buffers[i + length] == buffers[sl + length]:
             match_find = True
             length = length + 1
@@ -46,13 +53,16 @@ def find_match(search_buf, lookahead_buf, max_matches):
     return sl - best_it, best_length, lookahead_buf[best_length]
 
 
-def encode(file_to_read, file_to_write, search_bytes, lookahead_bytes, max_best_matches):
+def number_to_byte_arr(number, byte_num):
+    return [(number >> 8 * n) & 0xff for n in reversed(range(byte_num))]
+
+
+def encode(file_to_read, file_to_write, search_bytes, lookahead_bytes, max_match_depth=None):
 
     search_bytes = int(search_bytes)
     lookahead_bytes = int(lookahead_bytes)
 
-    if (search_bytes + lookahead_bytes) > 16:
-        print("Err! Sum of search window and match window can't be greater than 16!")
+    byte_len = math.ceil((search_bytes + lookahead_bytes)/8)
 
     data = open(file_to_read, "rb").read()
     file = open(file_to_write, "wb")
@@ -63,14 +73,14 @@ def encode(file_to_read, file_to_write, search_bytes, lookahead_bytes, max_best_
     search_iterator = 0
     lookahead_it = 0
 
-    file.write(struct.pack('H', lookahead_bytes))
+    file.write(struct.pack('BB', byte_len, lookahead_bytes))
 
     while lookahead_it in range(len(data)):
         search_buf = data[search_iterator:lookahead_it]
         lookahead_buf = data[lookahead_it:lookahead_it + lookahead_len]
 
-        (offset, length, symbol) = find_match(search_buf, lookahead_buf, int(max_best_matches))
-        file.write(struct.pack('HB', (offset << lookahead_bytes) + length, symbol))
+        (offset, length, symbol) = find_match(search_buf, lookahead_buf, max_match_depth)
+        file.write(struct.pack("B" * (byte_len + 1), *number_to_byte_arr((offset << lookahead_bytes) + length, byte_len), symbol))
         lookahead_it += length + 1
 
         if lookahead_it >= search_len:
