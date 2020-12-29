@@ -2,20 +2,28 @@ import struct
 import sys
 
 
-def main():
+def byte_arr_to_number(arr, byte_num):
+    number = 0
+    for n in range(byte_num):
+        number += (arr[n] << 8 * (byte_num - n - 1))
 
-    [_, input_file, output_file] = sys.argv
+    return number
 
+
+def decode(input_file, output_file):
     data = open(input_file, "rb").read()
     file = open(output_file, "wb")
 
     buffer = "".encode()
 
-    lookahead_bytes, *_ = struct.unpack('H', data[:2])
     i = 2
+    byte_len, lookahead_bytes = struct.unpack('BB', data[:i])
 
     while i < len(data):
-        offset_and_length, letter = struct.unpack('HB', data[i:i+3])
+        *byte_arr, letter = struct.unpack('B' * (byte_len+1), data[i:i+byte_len+1])
+
+        offset_and_length = byte_arr_to_number(byte_arr, byte_len)
+
         offset = offset_and_length >> lookahead_bytes
         length = offset_and_length - offset * (2**lookahead_bytes)
 
@@ -25,9 +33,13 @@ def main():
 
         if offset > 0:
             buffer += buffer[-offset: -offset + length]
-        buffer += letter.to_bytes(1,'big')
+        buffer += letter.to_bytes(1, 'big')
         i += 3
     file.write(buffer)
+
+
+def main():
+    decode(*sys.argv[1:])
 
 
 if __name__ == "__main__":
