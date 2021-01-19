@@ -100,15 +100,15 @@ def test():
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
 
-    file_dir = '{test_dir}/{file}'
+    file_dir = f'{test_dir}/{file}'
 
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
 
-    for i in range(1, 16):
-        j = 16 - i
-        encode(file, '{file_dir}/{i}_{j}', i, j)
-        print('{i}_{j} completed!')
+    for i in range(0, 16):
+        for j in range(1, i):
+            encode(file, f'{file_dir}/{i}_{j}', i, j)
+            print(f'{i}_{j} completed!')
 
 
 def main():

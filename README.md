@@ -1,11 +1,12 @@
 # LZ77 algoritmas
+w - Window size,
 
+l - Look ahead buffer size
 ##Testai:
 
 #####Tekstas:
 
-w - Window size
-l = Look ahead buffer size
+
 
 * Trumpas, 1kb -> 890b, (w = 10, l = 4)
 * Vidutinis, 100kb -> 960b, (w = 12, l = 4)
